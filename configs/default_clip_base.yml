@@ -43,7 +43,6 @@ model:
   multiview: ${data.multiview}
 
 train:
-  task: vlp
   batch_size: 16
   epochs: 10
   warmup_epochs: 1

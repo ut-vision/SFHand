@@ -129,8 +129,8 @@ def CLIP_VITB16(
     )
 
     missing_keys, unexpected_keys = model.load_state_dict(remapped_state_dict, strict=False)
-    print("missing_keys: ", missing_keys)
-    print("unexpected_keys: ", unexpected_keys)
+    # print("missing_keys: ", missing_keys)
+    # print("unexpected_keys: ", unexpected_keys)
 
     return model
 

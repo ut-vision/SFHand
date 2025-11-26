@@ -146,63 +146,73 @@ class EgoHaFLDataset(torch.utils.data.Dataset):
             narration = narration.replace('\n', '')
             caption = clip.tokenize(narration, context_length=77, truncate=True)
 
-        # hand_pkl = pickle.load(open(os.path.join(self.ego4d_hand_root, f'{uid}.pkl'), 'rb'))
         hand_pkl = self._lmdb_engine[uid]
-        hand_annot = {'camera_t': [], 'hand_type': [], 'global_orient': [], 'hand_pose': [], 'betas': [],
-                      'boxes': [], 'keypoints_3d': [], 'valid': [], 'vertices': [], 'orig_size':[], 'focal': []}
-
-        # Only load the second half hand annotations
+        
         assert 16 % self.clip_length == 0, "clip length must divide 16"
         step = 16 // self.clip_length
-        for fr in hand_pkl[::step]:
-            hand_annot['camera_t'].append(np.zeros((self.max_hand, 3)))
-            hand_annot['hand_type'].append(np.ones((self.max_hand,), dtype=np.int8) * 2)
-            hand_annot['global_orient'].append(np.zeros((self.max_hand, 1, 3, 3)))
-            hand_annot['hand_pose'].append(np.zeros((self.max_hand, 15, 3, 3)))
-            hand_annot['betas'].append(np.zeros((self.max_hand, 10)))
-            hand_annot['boxes'].append(np.zeros((self.max_hand, 4)))
-            hand_annot['keypoints_3d'].append(np.zeros((self.max_hand, 21, 3)))
-            hand_annot['vertices'].append(np.zeros((self.max_hand, 778, 3)))
-            hand_annot['orig_size'].append(np.zeros((2,)))
-            hand_annot['valid'].append(np.zeros((1,)))
-
+        selected_frames = hand_pkl[::step]
+        num_frames = len(selected_frames)
+        
+        # 预先分配数组，避免列表append和后续转换的开销
+        scale_x = self.crop_size / width
+        scale_y = self.crop_size / height
+        scale_xy = np.array([scale_x, scale_y, scale_x, scale_y])
+        
+        hand_annot = {
+            'camera_t': np.zeros((num_frames, self.max_hand, 3), dtype=np.float32),
+            'hand_type': np.ones((num_frames, self.max_hand), dtype=np.int8) * 2,
+            'global_orient': np.zeros((num_frames, self.max_hand, 1, 3, 3), dtype=np.float32),
+            'hand_pose': np.zeros((num_frames, self.max_hand, 15, 3, 3), dtype=np.float32),
+            'betas': np.zeros((num_frames, self.max_hand, 10), dtype=np.float32),
+            'boxes': np.zeros((num_frames, self.max_hand, 4), dtype=np.float32),
+            'keypoints_3d': np.zeros((num_frames, self.max_hand, 21, 3), dtype=np.float32),
+            'vertices': np.zeros((num_frames, self.max_hand, 778, 3), dtype=np.float32),
+            'orig_size': np.zeros((num_frames, 2), dtype=np.float32),
+            'valid': np.zeros((num_frames, 1), dtype=np.int32),
+        }
+        
+        for frame_idx, fr in enumerate(selected_frames):
             if len(fr) == 0:
                 continue
-            # Complete the just-added annotation
-            valid_indices = np.where((fr['camera_t'][:, 2] > 0) & (fr['camera_t'][:, 2] < self.depth_thresh))[0]
+            
+            camera_t_z = fr['camera_t'][:, 2]
+            valid_mask = (camera_t_z > 0) & (camera_t_z < self.depth_thresh)
+            valid_indices = np.where(valid_mask)[0]
             h = min(len(valid_indices), self.max_hand)
+            
+            if h == 0:
+                continue
+                
             valid_indices = valid_indices[:h]
-            hand_annot['camera_t'][-1][:h] = fr['camera_t'][valid_indices]
-            hand_annot['hand_type'][-1][:h] = fr['is_right'][valid_indices]
-            hand_annot['global_orient'][-1][:h] = fr['mano_params']['global_orient'][valid_indices]
-            hand_annot['hand_pose'][-1][:h] = fr['mano_params']['hand_pose'][valid_indices]
-            hand_annot['betas'][-1][:h] = fr['mano_params']['betas'][valid_indices]
-            hand_annot['keypoints_3d'][-1][:h] = fr['keypoints_3d'][valid_indices]
-            hand_annot['vertices'][-1][:h] = fr['vertices'][valid_indices]
-            hand_annot['valid'][-1] += h  # Number of valid hands
+            
+            hand_annot['camera_t'][frame_idx, :h] = fr['camera_t'][valid_indices]
+            hand_annot['hand_type'][frame_idx, :h] = fr['is_right'][valid_indices]
+            hand_annot['global_orient'][frame_idx, :h] = fr['mano_params']['global_orient'][valid_indices]
+            hand_annot['hand_pose'][frame_idx, :h] = fr['mano_params']['hand_pose'][valid_indices]
+            hand_annot['betas'][frame_idx, :h] = fr['mano_params']['betas'][valid_indices]
+            hand_annot['keypoints_3d'][frame_idx, :h] = fr['keypoints_3d'][valid_indices]
+            hand_annot['vertices'][frame_idx, :h] = fr['vertices'][valid_indices]
+            hand_annot['valid'][frame_idx, 0] = h
+            
+            hand_annot['boxes'][frame_idx, :h, :2] = fr['box_center'][valid_indices]
+            hand_annot['boxes'][frame_idx, :h, 2] = fr['box_size'][valid_indices]
+            hand_annot['boxes'][frame_idx, :h, 3] = fr['box_size'][valid_indices]
+            
+            hand_annot['boxes'][frame_idx, :h] *= scale_xy
+            hand_annot['boxes'][frame_idx, :h] /= self.crop_size
+            
+            hand_annot['orig_size'][frame_idx] = [width, height]
 
-            hand_annot['boxes'][-1][:h, :2] = fr['box_center'][valid_indices]
-            hand_annot['boxes'][-1][:h, 2] = fr['box_size'][valid_indices]
-            hand_annot['boxes'][-1][:h, 3] = fr['box_size'][valid_indices]
-
-            scale_x = self.crop_size / width
-            scale_y = self.crop_size / height
-
-            hand_annot['boxes'][-1][:h, 0] *= scale_x  # cx
-            hand_annot['boxes'][-1][:h, 1] *= scale_y  # cy
-            hand_annot['boxes'][-1][:h, 2] *= scale_x  # w
-            hand_annot['boxes'][-1][:h, 3] *= scale_y  # h
-
-            # 如果后续需要归一化到 [0, 1]
-            hand_annot['boxes'][-1][:h, :] /= self.crop_size
-
-            hand_annot['orig_size'][-1][:] = width, height
-
-        for k, v in hand_annot.items():
-            if k in ["hand_type", "valid"]:
-                hand_annot[k] = torch.from_numpy(np.array(v)).to(torch.int)
-            else:
-                hand_annot[k] = torch.from_numpy(np.array(v)).to(torch.float16)
+        hand_annot['camera_t'] = torch.from_numpy(hand_annot['camera_t']).to(torch.float16)
+        hand_annot['hand_type'] = torch.from_numpy(hand_annot['hand_type']).to(torch.int)
+        hand_annot['global_orient'] = torch.from_numpy(hand_annot['global_orient']).to(torch.float16)
+        hand_annot['hand_pose'] = torch.from_numpy(hand_annot['hand_pose']).to(torch.float16)
+        hand_annot['betas'] = torch.from_numpy(hand_annot['betas']).to(torch.float16)
+        hand_annot['boxes'] = torch.from_numpy(hand_annot['boxes']).to(torch.float16)
+        hand_annot['keypoints_3d'] = torch.from_numpy(hand_annot['keypoints_3d']).to(torch.float16)
+        hand_annot['vertices'] = torch.from_numpy(hand_annot['vertices']).to(torch.float16)
+        hand_annot['orig_size'] = torch.from_numpy(hand_annot['orig_size']).to(torch.float16)
+        hand_annot['valid'] = torch.from_numpy(hand_annot['valid']).to(torch.int)
         hand_annot['uid'] = uid
         hand_annot['focal'] = focal
         return frames, frames_rear, caption, hand_annot

@@ -1,26 +1,16 @@
-import csv
-import glob
-import os.path as osp
-import pickle
 import random
 import numpy as np
 import pandas as pd
 import torch
-import os
 
 import decord
-from decord import cpu
 decord.bridge.set_bridge("native")
 decord.logging.set_level(decord.logging.FATAL)
 
-import io
-from ipdb import set_trace
 from .data_utils import video_loader
 from .lmdb_utils import LMDBEngine
-# from petrel_client.client import Client
 import ast
 import clip
-import pickle
 import torchvision.transforms as transforms
 
 

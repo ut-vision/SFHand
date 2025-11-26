@@ -1,21 +1,10 @@
 import csv
-import glob
-import json
 import numpy as np
 import os.path as osp
-import pickle
-import random
 
 import decord
-import pandas as pd
 import torch
-from decord import cpu
-import cv2
-import io, os
-import argparse
-import time
-import func_timeout
-from func_timeout import func_set_timeout
+import io
 
 try:
     from petrel_client.client import Client
@@ -35,16 +24,6 @@ except:
 def datetime2sec(str):
     hh, mm, ss = str.split(':')
     return int(hh) * 3600 + int(mm) * 60 + float(ss)
-
-
-# def get_vr(video_path):
-#     video_bytes = client.get(video_path)
-#     assert video_bytes is not None, "Get video failed from {}".format(video_path)
-#     video_path = video_bytes
-#     if isinstance(video_path, bytes):
-#         video_path = io.BytesIO(video_bytes)
-#     vreader = decord.VideoReader(video_path, ctx=cpu(0))
-#     return vreader
 
 
 def get_frame_ids(start_frame, end_frame, num_segments=32, jitter=True):

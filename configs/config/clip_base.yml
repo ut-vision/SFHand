@@ -1,0 +1,57 @@
+_base_: '../default_clip_base.yml'
+data:
+  dataset: ego4d #ego4d_htego
+  # ego4d_root: pssd:s3://ego4d/all_videos_fps30_short320_chunked/
+  ego4d_root: EgoHaFL/v1/videos_224p
+  ego4d_metadata: EgoHaFL/EgoHaFL_train.csv
+  ego4d_hand_root: EgoHaFL/EgoHaFL_lmdb
+  # split_idx: 21291
+
+  howto_metadata: /mnt/petrelfs/share_data/xujilan/annotations/howto100m/Howto-Interlink-egoonly_egolabel.csv
+
+  clip_length: 8
+  clip_stride: 16
+  max_hand: 10
+  depth_threshold: 2.5
+  
+train:
+  task: vlp
+  batch_size: 256
+  epochs: 5
+  lr: 1e-4
+  fix_lr: true
+  save_freq: 1
+
+model:
+  name: CLIP_VITB16
+  ckpt_path: /mnt/petrelfs/peibaoqi/robot/mae/ckpt/ViT-B-16.pt
+  freeze_temperature: true
+  lavila_path: dont_use
+  clip_length: 4 # This is defined by pre-trained EgoHOD weights, NOT CHANGEABLE
+  pred_clip_length: 1 # Number of frames to predict
+  max_hand: 10
+
+loss:
+  set_cost_class: 0
+  set_cost_bbox: 10
+  set_cost_giou: 4
+  pose_loss_coef: 2
+  bbox_loss_coef: 5
+  giou_loss_coef: 2
+  itc_loss_coef: 1
+  eos_coef: 0.1
+wandb: true
+resume: pre_ckpt/base_best.pt
+
+MANO:
+  DATA_DIR: _DATA/data/
+  MODEL_PATH: data/mano
+  GENDER: neutral
+  NUM_HAND_JOINTS: 15
+  MEAN_PARAMS: data/mano_mean_params.npz
+  CREATE_BODY_POSE: false
+
+output_dir: full_train/debug
+use_eva: False
+use_bert: False
+

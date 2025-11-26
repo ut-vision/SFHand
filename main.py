@@ -23,7 +23,7 @@ import util.dist_utils as dist_utils
 
 from engine_pretrain import train_one_epoch, evaluate, build_transform
 from util.config import get_config
-from dataset.egodataset import EgoExoDataset
+from dataset.egodataset import EgoHaFLDataset
 from model.clip import *
 import torch
 import torch.cuda.amp as amp
@@ -89,10 +89,10 @@ def main(args):
     crop_size = 336 if "_336PX" in config.model.name  else 224
     tokenizer = None
 
-    train_dataset = EgoExoDataset(
+    train_dataset = EgoHaFLDataset(
         config.data, transform=transform_train, is_training=True, tokenizer=tokenizer, crop_size=crop_size
     )
-    val_dataset = EgoExoDataset(
+    val_dataset = EgoHaFLDataset(
         config.data, transform=transform_val, is_training=False, tokenizer=tokenizer, crop_size=crop_size, split='val')
 
     if dist_utils.get_rank() == 0 and args.log_dir is not None:

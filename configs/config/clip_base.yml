@@ -1,13 +1,9 @@
 _base_: '../default_clip_base.yml'
 data:
-  dataset: ego4d #ego4d_htego
-  # ego4d_root: pssd:s3://ego4d/all_videos_fps30_short320_chunked/
-  ego4d_root: EgoHaFL/v1/videos_224p
-  ego4d_metadata: EgoHaFL/EgoHaFL_train.csv
-  ego4d_hand_root: EgoHaFL/EgoHaFL_lmdb
-  # split_idx: 21291
-
-  howto_metadata: /mnt/petrelfs/share_data/xujilan/annotations/howto100m/Howto-Interlink-egoonly_egolabel.csv
+  dataset: EgoHaFL
+  EgoHaFL_root: EgoHaFL/v1/videos_224p
+  EgoHaFL_metadata: EgoHaFL/EgoHaFL_train.csv
+  EgoHaFL_hand_root: EgoHaFL/EgoHaFL_lmdb
 
   clip_length: 8
   clip_stride: 16
@@ -24,7 +20,6 @@ train:
 
 model:
   name: CLIP_VITB16
-  ckpt_path: /mnt/petrelfs/peibaoqi/robot/mae/ckpt/ViT-B-16.pt
   freeze_temperature: true
   lavila_path: dont_use
   clip_length: 4 # This is defined by pre-trained EgoHOD weights, NOT CHANGEABLE
@@ -44,12 +39,8 @@ wandb: true
 resume: pre_ckpt/base_best.pt
 
 MANO:
-  DATA_DIR: _DATA/data/
   MODEL_PATH: data/mano
-  GENDER: neutral
   NUM_HAND_JOINTS: 15
-  MEAN_PARAMS: data/mano_mean_params.npz
-  CREATE_BODY_POSE: false
 
 output_dir: full_train/debug
 use_eva: False

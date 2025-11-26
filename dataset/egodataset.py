@@ -26,48 +26,32 @@ import torchvision.transforms as transforms
 
 # client = Client()
 
-class EgoExoDataset(torch.utils.data.Dataset):
+class EgoHaFLDataset(torch.utils.data.Dataset):
     def __init__(self, cfg, transform=None, is_training=True, tokenizer=None, crop_size=224,
                  subsample_stride=None, split='train'):
         self.cfg = cfg
         self.dataset = cfg.dataset
-        self.ego4d_root = cfg.ego4d_root
-        self.ego4d_hand_root = cfg.ego4d_hand_root
-        self.ego4d_metadata = cfg.ego4d_metadata
-        self.ego4d_chunk_len = cfg.ego4d_video_chunk_len
-        self.ego4d_fps = cfg.ego4d_fps
+        self.EgoHaFL_root = cfg.EgoHaFL_root
+        self.EgoHaFL_hand_root = cfg.EgoHaFL_hand_root
+        self.EgoHaFL_metadata = cfg.EgoHaFL_metadata
+        self.EgoHaFL_chunk_len = cfg.EgoHaFL_video_chunk_len
+        self.EgoHaFL_fps = cfg.EgoHaFL_fps
         self.clip_length = cfg.clip_length
         self.max_hand = cfg.max_hand
         self.depth_thresh = cfg.depth_threshold
         self.split = split
 
-        self.howto_root = cfg.howto_root
-        self.howto_metadata = cfg.howto_metadata
-        self.howto_chunk_len = cfg.howto_video_chunk_len
-        self.howto_fps = cfg.howto_fps
-
         self.is_trimmed = cfg.is_trimmed
         ### hardcode this for now ###
         self.narration_selection = 'random'
 
-        if self.dataset == 'ego4d':
-            all_samples = pd.read_csv(self.ego4d_metadata)
+        if self.dataset == 'EgoHaFL':
+            all_samples = pd.read_csv(self.EgoHaFL_metadata)
             self.samples = all_samples
 
-            if cfg.ego4d_metadata_aux is not None:
-                self.aux_samples = pd.read_csv(cfg.ego4d_metadata_aux)
+            if cfg.EgoHaFL_metadata_aux is not None:
+                self.aux_samples = pd.read_csv(cfg.EgoHaFL_metadata_aux)
                 self.samples = pd.concat([self.samples, self.aux_samples])
-
-        elif self.dataset == 'htego':
-            self.samples = pd.read_csv(self.howto_metadata)
-        elif self.dataset == 'ego4d_htego':
-            self.ego4d_samples = pd.read_csv(self.ego4d_metadata)
-            if cfg.ego4d_metadata_aux is not None:
-                self.aux_samples = pd.read_csv(cfg.ego4d_metadata_aux)
-                self.ego4d_samples = pd.concat([self.ego4d_samples, self.aux_samples])
-
-            self.htego_samples = pd.read_csv(self.howto_metadata)
-            self.samples = pd.concat([self.ego4d_samples, self.htego_samples])
         else:
             raise NotImplementedError
         print(len(self.samples))
@@ -93,7 +77,7 @@ class EgoExoDataset(torch.utils.data.Dataset):
         return len(self.samples)
 
     def _init_lmdb_database(self):
-        self._lmdb_engine = LMDBEngine(self.ego4d_hand_root, write=False)
+        self._lmdb_engine = LMDBEngine(self.EgoHaFL_hand_root, write=False)
 
     def process_text(self, narration):
         ### this is a list of narrations ###
@@ -114,12 +98,12 @@ class EgoExoDataset(torch.utils.data.Dataset):
         # try:
         ### get indicator ###
         curr = self.samples.iloc[i]
-        curr_dataset = curr['dataset'] if 'dataset' in curr else 'ego4d'
+        curr_dataset = curr['dataset'] if 'dataset' in curr else 'EgoHaFL'
         exo_vid_path = ''
         # print(curr['video_id'],curr_dataset)
         ### get data ###
 
-        if curr_dataset == 'ego4d':
+        if curr_dataset == 'EgoHaFL':
 
             uid, vid, start_second, end_second, narration = (
                 curr['uid'], curr['video_id'], curr['start_second'], curr['end_second'], curr['caption'])
@@ -127,10 +111,10 @@ class EgoExoDataset(torch.utils.data.Dataset):
             focal = curr['fx']
             # print(f'Getting ego video {vid} from {start_second} to {end_second}')
             # print('=============', self.ego4d_root, vid, self.ego4d_chunk_len)
-            frames = video_loader(self.ego4d_root, vid, 'mp4',
+            frames = video_loader(self.EgoHaFL_root, vid, 'mp4',
                                   start_second, end_second,
-                                  chunk_len=self.ego4d_chunk_len, clip_length=self.clip_length,
-                                  threads=self.threads, fps=self.ego4d_fps,
+                                  chunk_len=self.EgoHaFL_chunk_len, clip_length=self.clip_length,
+                                  threads=self.threads, fps=self.EgoHaFL_fps,
                                   fast_rrc=self.fast_rrc, rrc_params=self.rrc_params, jitter=self.is_training)
 
             # # Only read the fisrt half frames
@@ -144,17 +128,7 @@ class EgoExoDataset(torch.utils.data.Dataset):
             frames_rear = frames
             exo_frames = torch.zeros_like(frames)
         else:
-            vid = vid_path = curr['video_id']
-            start_second, end_second, narration = curr['start_second'], curr['end_second'], curr['text']
-            width, height = curr['vid_w'], curr['vid_h']
-            focal = curr['fx']
-            uid = curr['uid'] if 'uid' in curr else '{}_{}'.format(vid, start_second)
-
-            frames = video_loader(self.howto_root, vid_path, 'mp4', start_second, end_second,
-                                  chunk_len=self.howto_chunk_len, clip_length=self.clip_length,
-                                  threads=self.threads, fps=self.howto_fps,
-                                  fast_rrc=self.fast_rrc, rrc_params=self.rrc_params, jitter=self.is_training)
-            frames_rear = frames
+            raise NotImplementedError
 
         raw_caption = narration
 

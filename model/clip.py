@@ -5,7 +5,7 @@ import torch.nn as nn
 from timm.models.layers import trunc_normal_
 
 from .transformer import (TextTransformer, VisionTransformer,
-                          CrossAttentionDecoder, ResidualTemporalBlock, HandFeatureProjector)
+                          CrossAttentionDecoder, ROIMemory, HandTransformer, MultiTaskHead)
 from einops import rearrange
 import torch
 from collections import OrderedDict
@@ -113,11 +113,11 @@ def CLIP_VITB16(
 
     text_model = TextTransformer(context_length=77, vocab_size=49408, width=512, heads=8, layers=12, output_dim=project_embed_dim, causal_mask=not use_bidirectional_lm)
     decoder = CrossAttentionDecoder(hidden_dim=project_embed_dim, query_len=config.max_hand)
-    hf_proj = HandFeatureProjector(in_dim=162, out_dim=project_embed_dim)
+    hand_model = HandTransformer(in_dim=162, out_dim=project_embed_dim)
     mlp = MultiTaskHead(hidden_dim=project_embed_dim, seq_len=config.pred_clip_length)
-    adapter = ResidualTemporalBlock(embed_dim=project_embed_dim, n_head=8,  drop_path=0.1)
+    memory = ROIMemory(embed_dim=project_embed_dim, n_head=8,  drop_path=0.1, capacity=config.memory_capacity)
     model = CLIP(embed_dim=project_embed_dim, vision_model=vision_model,
-                 decoder=decoder, mlp=mlp, tempo_adapter=adapter, projector=hf_proj,
+                 decoder=decoder, mlp=mlp, memory=memory, hand_model=hand_model,
                  text_model=text_model, freeze_temperature=freeze_temperature,ckpt_path=config.lavila_path)
     
     print("=> loading openai model")
@@ -141,8 +141,8 @@ class CLIP(nn.Module):
                  text_model: nn.Module,
                  decoder: nn.Module,
                  mlp: nn.Module,
-                 tempo_adapter: nn.Module,
-                 projector: nn.Module,
+                 memory: nn.Module,
+                 hand_model: nn.Module,
                  vision_width: int = None,
                  text_width: int = None,
                  freeze_temperature=False,
@@ -153,8 +153,8 @@ class CLIP(nn.Module):
 
         self.visual = vision_model
         self.textual = text_model
-        self.adapter = tempo_adapter
-        self.projector = projector
+        self.memory = memory
+        self.hand_model = hand_model
         self.decoder = decoder
         self.mlp = mlp
 
@@ -274,9 +274,9 @@ class CLIP(nn.Module):
     def inference(self, image, text, hand_stat, valid, inference_params=None):
         image_embed, video_embed = self.encode_image(image, inference_params)
         text_embed = self.encode_text(text, cast_dtype=image_embed.dtype)
-        hand_embed = self.projector(hand_stat, valid)
+        hand_embed = self.hand_model(hand_stat, valid)
         fused_embed = torch.cat([video_embed, hand_embed.unsqueeze(1)], dim=1)
-        fused_embed = self.adapter(fused_embed, memorize=False)
+        fused_embed = self.memory(fused_embed, memorize=False)
         fused_embed = torch.cat([fused_embed, text_embed.unsqueeze(1)], dim=1)
 
         decoded_embed = self.decoder(fused_embed)
@@ -286,7 +286,7 @@ class CLIP(nn.Module):
     def forward(self,image, future, text, hand_stat, valid, eval_mode=False, roi_boxes=None, inference_params=None):
         image_embed, video_embed = self.encode_image(image, inference_params)
         text_embed = self.encode_text(text, cast_dtype=image_embed.dtype)
-        hand_embed = self.projector(hand_stat, valid)
+        hand_embed = self.hand_model(hand_stat, valid)
             
         if eval_mode:
             roi_boxes = self.inference(image, text, hand_stat, valid)['pred_boxes']
@@ -305,7 +305,7 @@ class CLIP(nn.Module):
             memo_params = None
 
         fused_embed = torch.cat([video_embed, hand_embed.unsqueeze(1)], dim=1)
-        fused_embed = self.adapter(fused_embed, memo_params=memo_params)
+        fused_embed = self.memory(fused_embed, memo_params=memo_params)
         fused_embed = torch.cat([fused_embed, text_embed.unsqueeze(1)], dim=1)
 
         decoded_embed = self.decoder(fused_embed)
@@ -315,33 +315,3 @@ class CLIP(nn.Module):
         output['hand_embed'] = hand_embed
         output['logit_scale'] = self.logit_scale.exp()
         return output
-
-
-class MultiTaskHead(nn.Module):
-    def __init__(self, hidden_dim=512, seq_len=8):
-        super().__init__()
-        self.box_head = nn.Linear(hidden_dim, 4 * seq_len)
-        self.class_head = nn.Linear(hidden_dim, 3 * seq_len)
-        self.camera_head = nn.Linear(hidden_dim, 3 * seq_len)
-        self.orient_head = nn.Linear(hidden_dim, 9 * seq_len)
-        self.pose_head = nn.Linear(hidden_dim, 135 * seq_len)
-        self.betas_head = nn.Linear(hidden_dim, 10 * seq_len)
-        self.seq_len = seq_len
-
-    def forward(self, x):
-        box = self.box_head(x).sigmoid()
-        cls = self.class_head(x)
-        camera_t = self.camera_head(x)
-        orient = self.orient_head(x)
-        pose = self.pose_head(x)
-        betas = self.betas_head(x)
-        outputs = {'pred_boxes': box,
-                   'pred_logits': cls,
-                   'pred_camera_t': camera_t,
-                   'pred_global_orient': orient,
-                   'pred_hand_pose': pose,
-                   'pred_betas': betas}
-        for k, v in outputs.items():
-            outputs[k] = rearrange(v, "bs q (seq dim) -> bs seq q dim", seq=self.seq_len)
-        outputs['pred_logits'] = outputs['pred_logits'].softmax(-1)
-        return outputs

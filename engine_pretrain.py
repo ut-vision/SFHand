@@ -79,7 +79,7 @@ def train_one_epoch(model: torch.nn.Module,
             model.zero_grad(set_to_none=True)
 
         # clear kv cache after a streaming
-        model.module.adapter.clear_cache()
+        model.module.memory.clear_cache()
 
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
@@ -153,7 +153,7 @@ def evaluate(model, criterion, data_loader, args, device, vis=False, iou_thresho
                     if stream_iter >= seq_len - 2:
                          visualize_video(video_vis, stream_targets['uid'], "render_results")
                          return
-        model.module.adapter.clear_cache()
+        model.module.memory.clear_cache()
 
         # reduce losses over all GPUs for logging purposes
         loss_dict_reduced = misc.reduce_dict(loss_dict)

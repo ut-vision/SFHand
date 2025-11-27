@@ -107,20 +107,10 @@ class EgoHaFLDataset(torch.utils.data.Dataset):
                                   threads=self.threads, fps=self.EgoHaFL_fps,
                                   fast_rrc=self.fast_rrc, rrc_params=self.rrc_params, jitter=self.is_training)
 
-            # # Only read the fisrt half frames
-            # frames = video_loader(self.ego4d_root, vid, 'mp4',
-            #                       start_second, start_second + (end_second - start_second) / 2,
-            #                       chunk_len=self.ego4d_chunk_len, clip_length=self.clip_length // 2,
-            #                       threads=self.threads, fps=self.ego4d_fps,
-            #                       fast_rrc=self.fast_rrc, rrc_params=self.rrc_params, jitter=self.is_training)
-
             narration = self.process_text(narration)
             frames_rear = frames
-            exo_frames = torch.zeros_like(frames)
         else:
             raise NotImplementedError
-
-        raw_caption = narration
 
         if self.transform is not None:
             frames = frames.float() / 255.0

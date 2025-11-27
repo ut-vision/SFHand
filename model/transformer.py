@@ -496,7 +496,7 @@ class CrossAttentionDecoder(nn.Module):
         return decoded
 
 
-class ResidualTemporalBlock(nn.Module):
+class ROIMemory(nn.Module):
     """
     A complete Transformer block with residual connection and KV cache,
     inspired by the structure of ResidualAttentionBlock, designed for streaming processing.
@@ -512,7 +512,8 @@ class ResidualTemporalBlock(nn.Module):
             attn_drop: float = 0.,
             drop_path: float = 0.,
             act_layer: Callable = nn.GELU,
-            norm_layer: Callable = LayerNorm
+            norm_layer: Callable = LayerNorm,
+            capacity: int = 1386
     ):
         super().__init__()
 
@@ -520,6 +521,8 @@ class ResidualTemporalBlock(nn.Module):
         self.ln_1 = norm_layer(embed_dim)
 
         self.n_head = n_head
+        self.capacity = capacity
+        print(f"Memory capacity: {self.capacity}")
         self.head_dim = embed_dim // n_head
         # For efficiency, merge the projection of Q,K,V into a single linear layer
         self.in_proj = nn.Linear(embed_dim, embed_dim * 3)
@@ -569,8 +572,8 @@ class ResidualTemporalBlock(nn.Module):
         '''
         # k, v = k_new, v_new
         if memorize:
-            self.k_cache = k.detach()
-            self.v_cache = v.detach()
+            self.k_cache = k.detach()[:, :self.capacity]
+            self.v_cache = v.detach()[:, :self.capacity]
         total_seq_len = k.shape[1]
         q = q.view(batch_size, seq_len, self.n_head, self.head_dim).transpose(1, 2)
         k = k.view(batch_size, total_seq_len, self.n_head, self.head_dim).transpose(1, 2)
@@ -606,7 +609,7 @@ class ResidualTemporalBlock(nn.Module):
         x = x + self.drop_path2(self.ls_2(self.mlp(self.ln_2(x))))
         return x
 
-class HandFeatureProjector(nn.Module):
+class HandTransformer(nn.Module):
     def __init__(self, in_dim=162, out_dim=512, nhead=4, num_layers=2):
         super().__init__()
         self.input_proj = nn.Linear(in_dim, out_dim)
@@ -642,3 +645,34 @@ class HandFeatureProjector(nn.Module):
         feat_final = feats_encoded.sum(dim=1) / valid_count  # (bs, out_dim)
 
         return feat_final
+
+
+class MultiTaskHead(nn.Module):
+    def __init__(self, hidden_dim=512, seq_len=8):
+        super().__init__()
+        self.box_head = nn.Linear(hidden_dim, 4 * seq_len)
+        self.class_head = nn.Linear(hidden_dim, 3 * seq_len)
+        self.camera_head = nn.Linear(hidden_dim, 3 * seq_len)
+        self.orient_head = nn.Linear(hidden_dim, 9 * seq_len)
+        self.pose_head = nn.Linear(hidden_dim, 135 * seq_len)
+        self.betas_head = nn.Linear(hidden_dim, 10 * seq_len)
+        self.seq_len = seq_len
+
+    def forward(self, x):
+        box = self.box_head(x).sigmoid()
+        cls = self.class_head(x)
+        camera_t = self.camera_head(x)
+        orient = self.orient_head(x)
+        pose = self.pose_head(x)
+        betas = self.betas_head(x)
+        outputs = {'pred_boxes': box,
+                   'pred_logits': cls,
+                   'pred_camera_t': camera_t,
+                   'pred_global_orient': orient,
+                   'pred_hand_pose': pose,
+                   'pred_betas': betas}
+        for k, v in outputs.items():
+            outputs[k] = rearrange(v, "bs q (seq dim) -> bs seq q dim", seq=self.seq_len)
+        outputs['pred_logits'] = outputs['pred_logits'].softmax(-1)
+        return outputs
+

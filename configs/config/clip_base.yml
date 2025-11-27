@@ -24,6 +24,7 @@ model:
   clip_length: 4 # This is defined by pre-trained EgoHOD weights, NOT CHANGEABLE
   pred_clip_length: 1 # Number of frames to predict
   max_hand: 10
+  memory_capacity: 1386
 
 loss:
   set_cost_class: 0

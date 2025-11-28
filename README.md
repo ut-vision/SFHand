@@ -53,6 +53,7 @@ Key components: Streaming autoregressive transformer and ROI-enhanced memory.
 
 ```bash
 git clone git@github.com:ut-vision/SFHand.git
+cd SFHand
 conda env create -f environment.yml
 conda activate sfhand
 pip install -r requirements.txt

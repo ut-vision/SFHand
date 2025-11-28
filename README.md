@@ -46,6 +46,7 @@ Key components: Streaming autoregressive transformer and ROI-enhanced memory.
 | Pretrained Weights                   | ✅              |
 | Evaluation Code                      | ✅              |
 | Embodied Evaluation (Franka Kitchen) | 🔜 Coming soon |
+| 3D Hand Annotation Code              | 🔜 Coming soon |
 
 ---
 

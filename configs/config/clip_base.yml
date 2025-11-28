@@ -12,7 +12,7 @@ data:
   
 train:
   batch_size: 256
-  epochs: 5
+  epochs: 4
   lr: 1e-4
   fix_lr: true
   save_freq: 1

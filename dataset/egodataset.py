@@ -89,8 +89,6 @@ class EgoHaFLDataset(torch.utils.data.Dataset):
         ### get indicator ###
         curr = self.samples.iloc[i]
         curr_dataset = curr['dataset'] if 'dataset' in curr else 'EgoHaFL'
-        exo_vid_path = ''
-        # print(curr['video_id'],curr_dataset)
         ### get data ###
 
         if curr_dataset == 'EgoHaFL':
@@ -99,8 +97,6 @@ class EgoHaFLDataset(torch.utils.data.Dataset):
                 curr['uid'], curr['video_id'], curr['start_second'], curr['end_second'], curr['caption'])
             width, height = curr['vid_w'], curr['vid_h']
             focal = curr['fx']
-            # print(f'Getting ego video {vid} from {start_second} to {end_second}')
-            # print('=============', self.ego4d_root, vid, self.ego4d_chunk_len)
             frames = video_loader(self.EgoHaFL_root, vid, 'mp4',
                                   start_second, end_second,
                                   chunk_len=self.EgoHaFL_chunk_len, clip_length=self.clip_length,

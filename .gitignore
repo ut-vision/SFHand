@@ -1,7 +1,6 @@
 output_dir/
 *__pycache__*
 pre_ckpt/
-mano
 stream_*
 vis*
 vis_gt/
@@ -11,3 +10,4 @@ checkpoints
 candidate_ckpt
 render_results
 EgoHaFL
+*.pkl

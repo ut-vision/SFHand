@@ -1,6 +1,7 @@
-export PYTHONPATH="/home/lruicong/embodi/StreamPOS"
+export PYTHONPATH="."
 export PYOPENGL_PLATFORM=osmesa
 
-CUDA_VISIBLE_DEVICES=0 torchrun --nproc_per_node=1 main.py --config_file configs/config/clip_base.yml
-# CUDA_VISIBLE_DEVICES=0 torchrun --master_port=29512 --nproc_per_node=1 main.py --config_file configs/config/clip_base_eval.yml --eval
+# Recommendation: Training with 3 GPUs, batch size 256, learning rate 1e-4, 5 epochs.
+CUDA_VISIBLE_DEVICES=0,1,2 torchrun --nproc_per_node=3 main.py --config_file configs/config/clip_base.yml
+CUDA_VISIBLE_DEVICES=0,1,2 torchrun --nproc_per_node=3 main.py --config_file configs/config/clip_base_eval.yml --eval
 

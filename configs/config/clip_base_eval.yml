@@ -32,7 +32,7 @@ loss:
   itc_loss_coef: 1
   eos_coef: 0.1
 wandb: true
-resume: debug/checkpoint_epoch4.pt
+resume: debug/checkpoint_sfhand.pt
 
 MANO:
   MODEL_PATH: data/mano

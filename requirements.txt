@@ -6,12 +6,13 @@ ipdb==0.13.11
 kornia==0.6.10
 mmengine==0.10.3
 nltk==3.8.1
-numpy==1.25.2
+numpy==1.23.5
 omegaconf==2.2.3
 opencv_python==4.5.4.58
 pandas==1.5.1
 Pillow==11.1.0
 PyYAML==6.0.2
+pyrender==0.1.45
 scikit_learn==1.2.2
 submitit==1.5.2
 timm==0.5.4
@@ -20,5 +21,5 @@ tensorboard==2.20.0
 lmdb==1.7.3
 smplx==0.1.28
 chumpy==0.70
-numpy==1.23.5
 git+https://github.com/openai/CLIP.git
+flash_attn==2.7.4.post1

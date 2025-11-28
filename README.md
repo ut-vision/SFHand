@@ -123,6 +123,12 @@ Download here:
 
 ---
 
+## ✍️ **3D Hand Annotation**
+
+> ⏳ Coming soon — detailed annotation tools, formats, and processing scripts will be released once finalized.
+
+---
+
 ## 📚 **Citation**
 
 ```latex

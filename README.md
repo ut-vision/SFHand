@@ -50,12 +50,13 @@ Key components: Streaming autoregressive transformer and ROI-enhanced memory.
 ---
 
 ## 🔧 **Installation**
-
+We develop and test the project under: `torch 2.8.0+cu129`.
 ```bash
 git clone git@github.com:ut-vision/SFHand.git
-cd SFHand
+
 conda env create -f environment.yml
 conda activate sfhand
+
 pip install -r requirements.txt
 conda install -c conda-forge libgl
 ```

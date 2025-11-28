@@ -64,6 +64,8 @@ conda install -c conda-forge libgl
 
 Download [MANO model](https://mano.is.tue.mpg.de/) and put `MANO_LEFT.pkl` and `MANO_RIGHT.pkl` under `data/mano`.
 
+Download `base_best.pt` from [EgoHOD checkpoint](https://huggingface.co/Jazzcharles/EgoVideo) and place it at `./pre_ckpt/base_best.pt`.
+
 ---
 
 ## 📂 **Dataset: EgoHaFL**

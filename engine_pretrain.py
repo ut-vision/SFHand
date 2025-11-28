@@ -90,7 +90,7 @@ def train_one_epoch(model: torch.nn.Module,
 def evaluate(model, criterion, data_loader, args, device, vis=False, iou_thresholds=None):
     err_data = {}
     if iou_thresholds is None:
-        iou_thresholds = [-1, 0, 0.25, 0.4, 0.5, 0.75]
+        iou_thresholds = [-1, 0.5]
     for thresh in iou_thresholds:
         err_data[thresh] = {'true_positives': 0, 'positives': 0, 'gt_len': 0, 'camt_error': [],
                             'mpjpe': [], 'pa-mpjpe': [], 'camt_error_last': []}

@@ -8,6 +8,8 @@
 
 ## 🔥 **Project Highlights**
 
+![Demo GIF](assets/EgoHaFL.gif)
+
 | Feature                      | Description                                      |
 | ---------------------------- | ------------------------------------------------ |
 | 📡 **Streaming Framework**   | Autoregressive multi-modal hand forecasting      |

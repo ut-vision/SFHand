@@ -10,7 +10,7 @@
 
 ## 🔥 **Project Highlights**
 
-![Demo GIF](assets/EgoHaFL.gif)
+![SFHand Teaser](assets/SFHand_teaser.gif)
 
 | Feature                           | Description                                                                 |
 | --------------------------------- | --------------------------------------------------------------------------- |
@@ -75,6 +75,8 @@ Download `base_best.pt` from [EgoHOD checkpoint](https://huggingface.co/Jazzchar
 ---
 
 ## 📂 **Dataset: EgoHaFL**
+
+![EgoHaFL Dataset](assets/EgoHaFL.gif)
 
 EgoHaFL Dataset (annotations)：
 👉 [https://huggingface.co/datasets/ut-vision/EgoHaFL](https://huggingface.co/datasets/ut-vision/EgoHaFL)

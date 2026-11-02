@@ -1,4 +1,6 @@
-# **SFHand: A Streaming Framework for Language-guided 3D Hand Forecasting and Embodied Manipulation**
+# **Predictive Representation Learning for Manipulation via Streaming Egocentric 3D Hand Forecasting**
+
+<p align="center"><b>SFHand</b> · CoRL 2026</p>
 
 [![Paper](https://img.shields.io/badge/Paper-B31B1B?style=for-the-badge\&logo=arxiv\&logoColor=white)](https://arxiv.org/pdf/2511.18127)
 [![Data](https://img.shields.io/badge/Data-0040A1?style=for-the-badge\&logo=huggingface\&logoColor=ffffff)](https://huggingface.co/datasets/ut-vision/EgoHaFL)
@@ -10,13 +12,14 @@
 
 ![Demo GIF](assets/EgoHaFL.gif)
 
-| Feature                      | Description                                      |
-| ---------------------------- | ------------------------------------------------ |
-| 📡 **Streaming Framework**   | Autoregressive multi-modal hand forecasting      |
-| ✋ **Full-State Predictions** | Hand type, 2D box, 3D pose, and trajectory       |
-| 🧠 **ROI-Enhanced Memory**     | Temporal hand awareness        |
-| 🗣️ **Language-guided**      | Follows natural language instructions            |
-<!-- | 🤖 **Embodied Ready**        | Downstream manipulation support (Franka Kitchen) | -->
+| Feature                           | Description                                                                 |
+| --------------------------------- | --------------------------------------------------------------------------- |
+| 🎯 **Predictive Pretraining**     | 3D hand forecasting as the representation learning objective for manipulation |
+| 📡 **Streaming Framework**        | Autoregressive forecasting from a continuous video stream, one frame per step |
+| ✋ **Full-State Predictions**      | Hand type, 2D box, 3D MANO pose, and 3D trajectory                          |
+| 🧠 **ROI-Enhanced Memory**        | Temporal reasoning focused on hand-centric regions                          |
+| 🗣️ **Language-guided**           | Conditioned on fine-grained natural language instructions                   |
+| 🤖 **Embodied Transfer**          | SOTA on Franka Kitchen, Adroit, and a real Franka Research 3 arm            |
 
 ---
 
@@ -28,25 +31,28 @@
 
 ## 📝 **Introduction**
 
-> 💡 **SFHand is the first streaming architecture for language-guided 3D hand forecasting.**
+> 💡 **Forecasting 3D human hand motion is a better pretraining task for representation learning in embodied manipulation.**
 
-SFHand predicts future hand dynamics from continuous egocentric video + text instructions.
-The model outputs the following hand states *autoregressively*: Hand type, 2D bounding box, 3D hand pose, and 3D trajectory
+Existing representation learning methods for manipulation largely stop at perceptual understanding, i.e., what a scene contains or what an action is. A capable embodied agent also needs to predict the next motion. We propose forecasting 3D human hand motion as a pretraining task: the representation jointly learns how humans manipulate objects and how the motion will unfold next.
 
-Key components: Streaming autoregressive transformer and ROI-enhanced memory.
+**SFHand** is the first representation learning method via streaming egocentric 3D hand forecasting. It autoregressively predicts future 3D hand states (hand type, 2D bounding box, 3D pose, and trajectory) from a continuous stream of egocentric video and a language instruction. An **ROI-enhanced memory layer** captures temporal context while focusing on salient hand-centric regions.
+
+**EgoHaFL** (Egocentric 3D Hand Forecasting with Language) is the first open-source large-scale dataset pairing synchronized 3D hand poses with fine-grained language instructions (247K clips, 3.95M annotated frames).
+
+Transferred to downstream embodied control with frozen encoders, SFHand representations reach state-of-the-art success rates on Franka Kitchen, Adroit, and real-world Franka Research 3 manipulation (up to +13.4% success rate), while also achieving leading 3D hand forecasting accuracy (35.8% lower ADE than baselines).
 
 ---
 
 ## 📦 **Project Status**
 
-| Component                            | Status         |
-| ------------------------------------ | -------------- |
-| EgoHaFL Dataset                      | ✅              |
-| Pretraining Code                     | ✅              |
-| Pretrained Weights                   | ✅              |
-| Evaluation Code                      | ✅              |
-| Embodied Evaluation (Franka Kitchen) | 🔜 Coming soon |
-| 3D Hand Annotation Code              | 🔜 Coming soon |
+| Component                                        | Status         |
+| ------------------------------------------------ | -------------- |
+| EgoHaFL Dataset                                  | ✅              |
+| Pretraining Code                                 | ✅              |
+| Pretrained Weights                               | ✅              |
+| 3D Hand Forecasting Evaluation                   | ✅              |
+| Embodied Evaluation (Franka Kitchen / Adroit)    | 🔜 Coming soon |
+| 3D Hand Annotation Code                          | 🔜 Coming soon |
 
 ---
 
@@ -76,6 +82,8 @@ EgoHaFL Dataset (annotations)：
 Videos originate from Ego4D V1: [https://ego4d-data.org/](https://ego4d-data.org/).
 We use **224p compressed clips**.
 
+Each video is divided into consecutive 3-second clips. Every clip is paired with a fine-grained, sentence-level instruction (from EgoHOD) and 3D hand annotations (MANO parameters and 3D joints) at 16 frames per clip, converted to metric coordinates with camera intrinsics from EgoVid. The dataset contains 247K clips in total: 242K for training and 5K for testing.
+
 Directory structure:
 
 ```
@@ -91,9 +99,9 @@ EgoHaFL
 
 ---
 
-## 🚀 **Training & Evaluation**
+## 🚀 **Pretraining & Evaluation**
 
-### **Train + Eval**
+### **Pretrain + Eval (3D hand forecasting)**
 
 ```bash
 bash ./exps/pretrain.sh
@@ -119,9 +127,9 @@ Download here:
 
 ---
 
-## 🤖 **Embodied Evaluation (Franka Kitchen)**
+## 🤖 **Embodied Evaluation (Franka Kitchen / Adroit)**
 
-> ⏳ Coming soon — code will be added once finalized.
+> ⏳ Coming soon — code for transferring the pretrained SFHand encoders to downstream manipulation policies (frozen encoder + lightweight policy head) will be added once finalized.
 
 ---
 
@@ -134,11 +142,11 @@ Download here:
 ## 📚 **Citation**
 
 ```latex
-@article{liu2025sfhand,
-  title={SFHand: A Streaming Framework for Language-guided 3D Hand Forecasting and Embodied Manipulation},
-  author={Liu, Ruicong and Huang, Yifei and Ouyang, Liangyang and Kang, Caixin and and Sato, Yoichi},
-  journal={arXiv preprint arXiv:2511.18127},
-  year={2025}
+@inproceedings{liu2026sfhand,
+  title={Predictive Representation Learning for Manipulation via Streaming Egocentric 3D Hand Forecasting},
+  author={Liu, Ruicong and Huang, Yifei and Ouyang, Liangyang and Kang, Caixin and Sato, Yoichi},
+  booktitle={Conference on Robot Learning (CoRL)},
+  year={2026}
 }
 ```
 
@@ -148,4 +156,3 @@ Download here:
 
 SFHand builds on **[EgoHOD](https://github.com/InternRobotics/EgoHOD)**.
 Thanks to all contributors of the original codebase.
-

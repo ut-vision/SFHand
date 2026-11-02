@@ -2,7 +2,7 @@
 
 <p align="center"><b>SFHand</b> · CoRL 2026</p>
 
-[![Project Page](https://img.shields.io/badge/Project_Page-4285F4?style=for-the-badge\&logo=googlechrome\&logoColor=white)](https://github.com/ut-vision/SFHand)
+[![Project Page](https://img.shields.io/badge/Project_Page-4285F4?style=for-the-badge\&logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjEwIi8+PHBhdGggZD0iTTIgMTJoMjBNMTIgMmExNS4zIDE1LjMgMCAwIDEgNCAxMCAxNS4zIDE1LjMgMCAwIDEtNCAxMCAxNS4zIDE1LjMgMCAwIDEtNC0xMCAxNS4zIDE1LjMgMCAwIDEgNC0xMHoiLz48L3N2Zz4=)](https://ruicongliu.github.io/sfhand/)
 [![Paper](https://img.shields.io/badge/Paper-B31B1B?style=for-the-badge\&logo=arxiv\&logoColor=white)](https://arxiv.org/pdf/2511.18127)
 [![Data](https://img.shields.io/badge/Data-0040A1?style=for-the-badge\&logo=huggingface\&logoColor=ffffff)](https://huggingface.co/datasets/ut-vision/EgoHaFL)
 [![Model](https://img.shields.io/badge/Model-FF6D00?style=for-the-badge\&logo=huggingface\&logoColor=ffffff)](https://huggingface.co/ut-vision/SFHand)

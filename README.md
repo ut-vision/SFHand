@@ -2,6 +2,7 @@
 
 <p align="center"><b>SFHand</b> · CoRL 2026</p>
 
+[![Project Page](https://img.shields.io/badge/Project_Page-4285F4?style=for-the-badge\&logo=googlechrome\&logoColor=white)](https://github.com/ut-vision/SFHand)
 [![Paper](https://img.shields.io/badge/Paper-B31B1B?style=for-the-badge\&logo=arxiv\&logoColor=white)](https://arxiv.org/pdf/2511.18127)
 [![Data](https://img.shields.io/badge/Data-0040A1?style=for-the-badge\&logo=huggingface\&logoColor=ffffff)](https://huggingface.co/datasets/ut-vision/EgoHaFL)
 [![Model](https://img.shields.io/badge/Model-FF6D00?style=for-the-badge\&logo=huggingface\&logoColor=ffffff)](https://huggingface.co/ut-vision/SFHand)
